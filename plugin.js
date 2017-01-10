@@ -1,6 +1,13 @@
-if (!JSON.parse(localStorage.getItem('localSongs'))) {
-    localStorage.setItem('localSongs', '{}');
-}
+window.getLocalSongs = () => {
+    return JSON.parse(localStorage.getItem('localSongs'));
+};
+
+window.updateLocalSongs = (songs) => {
+    localStorage.setItem(
+        'localSongs',
+        JSON.stringify(songs)
+    );
+};
 
 window.saveToLocalStorage = ({ target }) => {
     target = $(target);
@@ -17,25 +24,19 @@ window.saveToLocalStorage = ({ target }) => {
         .media
         .id;
 
-    const songs = JSON.parse(
-        localStorage.getItem('localSongs')
-    );
+    const songs = getLocalSongs();
 
     songs[name] = videoID;
 
-    localStorage.setItem(
-        'localSongs',
-        JSON.stringify(songs)
-    );
+    updateLocalSongs(songs);
     target.text('Saved!');
-    changeLocalSelect($('.filterLocal').val());
+    changeLocalSelect();
 };
 
-window.changeLocalSelect = (filter) => {
+window.changeLocalSelect = () => {
     const select = $('.selectLocal');
-    const songs = JSON.parse(
-        localStorage.getItem('localSongs')
-    );
+    const songs = getLocalSongs();
+    const filter = $('.filterLocal').val();
 
     select.html('');
 
@@ -49,20 +50,23 @@ window.changeLocalSelect = (filter) => {
         select
             .find('option')
             .last()
-            .prop('value', search);
+            .prop('value', song);
     });
 };
 
 window.addSongs = (songs) => {
+    const localSongs = getLocalSongs();
     let promise = Promise.resolve();
 
     $.each(songs, (i, song) => {
-        promise = promise.then(() => addSong(song));
+        promise = promise.then(() => (
+            addSong(localSongs[song])
+        ));
     });
 };
 
 window.addSong = (videoId) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         $('#videoSearchInput')
             .val(`https://youtube.com/watch?v=${ videoId }`)
             [0]
@@ -85,6 +89,10 @@ window.addSong = (videoId) => {
         }, 40);
     });
 };
+
+if (!getLocalSongs()) {
+    updateLocalSongs({});
+}
 
 setInterval(() => {
     const statuses = $('.voteStatus');
@@ -116,6 +124,9 @@ $('.navbar-room-header')
         />
         <br/>
         <input type="submit" value="Add" class="addLocal">
+        <input type="submit" value="Delete" class="deleteLocal">
+        <input type="submit" value="Import" class="importLocal">
+        <input type="submit" value="Export" class="exportLocal">
     `);
 $('body')
     .on(
@@ -124,13 +135,51 @@ $('body')
         saveToLocalStorage
     );
 $('.filterLocal').on('input', () => {
-    changeLocalSelect($('.filterLocal').val());
+    changeLocalSelect();
 });
-changeLocalSelect('');
+$('.importLocal').on('click', () => {
+    const songs = JSON.parse(
+        prompt(
+            `
+                Paste the contents
+                of what you previosly
+                copied on another device
+            `
+                .replace(/\s+/g, ' ')
+                .replace(/^ | $/g, '')
+        )
+    );
+    const localSongs = getLocalSongs();
+
+    Object.assign(localSongs, songs);
+    updateLocalSongs(localSongs);
+    changeLocalSelect();
+});
+$('.exportLocal').on('click', () => {
+    const textarea = document.createElement('textarea');
+    const range = document.createRange();
+    const selection = window.getSelection();
+
+    $(textarea).css({
+        position: 'absolute',
+        top: '-9999px'
+    });
+    textarea.textContent = (
+        JSON.stringify(getLocalSongs())
+    );
+    document.body.appendChild(textarea);
+    range.selectNodeContents(textarea);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.execCommand('copy');
+    textarea.remove();
+    alert('The songs have been copied to the clipboard');
+});
+changeLocalSelect();
 
 (() => {
     const select = $('.selectLocal');
-    let songsToChoose = [];
+    let chosenSongs = [];
 
     select.on('change', () => {
         const selected = select
@@ -139,25 +188,43 @@ changeLocalSelect('');
             .filter(({ selected }) => selected)
             .map(({ value }) => value);
 
-        for (let i = songsToChoose.length - 1; i >= 0; i--) {
-            if (!selected.includes(songsToChoose[i])) {
-                songsToChoose.splice(i, 1);
+        for (let i = chosenSongs.length - 1; i >= 0; i--) {
+            if (!selected.includes(chosenSongs[i])) {
+                chosenSongs.splice(i, 1);
             }
         }
 
-        songsToChoose.push(
+        chosenSongs.push(
             ...selected
-                .filter((song) => !songsToChoose.includes(song))
+                .filter((song) => !chosenSongs.includes(song))
         );
+    });
+    $('.deleteLocal').on('click', () => {
+        const localSongs = getLocalSongs();
+
+        $.each(chosenSongs, (i, song) => {
+            delete localSongs[song];
+        });
+        select
+            .find('option')
+            .each((i, option) => {
+                option.selected = false;
+            });
+
+        updateLocalSongs(localSongs);
+        changeLocalSelect();
+        chosenSongs = [];
     });
     $('.addLocal').on('click', () => {
         $('.nav-tabs')
             .find('li:contains("Search Videos") a')
             [0].click();
-        addSongs(songsToChoose);
+        addSongs(chosenSongs);
         select
             .find('option')
-            .each((i, option) => option.selected = false);
-        songsToChoose = [];
+            .each((i, option) => {
+                option.selected = false;
+            });
+        chosenSongs = [];
     });
 })();
