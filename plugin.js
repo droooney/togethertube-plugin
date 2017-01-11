@@ -9,6 +9,15 @@ window.updateLocalSongs = (songs) => {
     );
 };
 
+window.saveLocalSong = (videoID, name) => {
+    const songs = getLocalSongs();
+
+    songs[name] = videoID;
+
+    updateLocalSongs(songs);
+    changeLocalSelect();
+};
+
 window.saveToLocalStorage = ({ target }) => {
     target = $(target);
 
@@ -24,13 +33,8 @@ window.saveToLocalStorage = ({ target }) => {
         .media
         .id;
 
-    const songs = getLocalSongs();
-
-    songs[name] = videoID;
-
-    updateLocalSongs(songs);
+    saveLocalSong(videoID, name);
     target.text('Saved!');
-    changeLocalSelect();
 };
 
 window.changeLocalSelect = () => {
@@ -98,11 +102,11 @@ setInterval(() => {
     const statuses = $('.voteStatus');
 
     statuses.each((index, elem) => {
-        if (!$(elem).find('.save-to-local-storage').length) {
+        if (!$(elem).find('.saveToLocalStorage').length) {
             $(`<button
                 class="
-                    save-to-local-storage
                     btn btn-block btn-success
+                    saveToLocalStorage
                 "
             >Save</button>`).appendTo(elem);
         }
@@ -128,10 +132,20 @@ $('.navbar-room-header')
         <input type="submit" value="Import" class="importLocal">
         <input type="submit" value="Export" class="exportLocal">
     `);
+$('#player ul.nav:eq(0)').append(`
+    <li>
+        <button
+            class="btn btn-success navbar-btn saveLocalCurrent"
+            style="margin-left: 20px;"
+        >
+            Save
+        </button>
+    </li>
+`);
 $('body')
     .on(
         'click',
-        '.save-to-local-storage',
+        '.saveToLocalStorage',
         saveToLocalStorage
     );
 $('.filterLocal').on('input', () => {
@@ -174,6 +188,23 @@ $('.exportLocal').on('click', () => {
     document.execCommand('copy');
     textarea.remove();
     alert('The songs have been copied to the clipboard');
+});
+$('.saveLocalCurrent').on('click', () => {
+    const videoID = angular
+        .element($('[data-ng-app]'))
+        .scope()
+        .remotePlayer
+        .mediaId;
+
+    $.get('https://www.googleapis.com/youtube/v3/videos', {
+        id: videoID,
+        part: 'snippet',
+        key: 'AIzaSyBe_-Zv9yb3G9KBwB1kBzp9F4feyTZw_zM'
+    }).then((data) => {
+        const { title } = data.items[0].snippet;
+
+        saveLocalSong(videoID, title);
+    });
 });
 changeLocalSelect();
 
