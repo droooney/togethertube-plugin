@@ -59,6 +59,10 @@ window.changeLocalSelect = () => {
 };
 
 window.addSongs = (songs) => {
+    $('.nav-tabs')
+        .find('li:contains("Search Videos") a')
+        [0].click();
+
     const localSongs = getLocalSongs();
     let promise = Promise.resolve();
 
@@ -271,9 +275,6 @@ changeLocalSelect();
         chosenSongs = [];
     });
     $('.addLocal').on('click', () => {
-        $('.nav-tabs')
-            .find('li:contains("Search Videos") a')
-            [0].click();
         addSongs(chosenSongs);
         select
             .find('option')
