@@ -224,6 +224,7 @@ $('.addRandom').on('click', () => {
         const randIndex = Math.floor(Math.random() * length);
         const rand = keys[randIndex];
 
+        keys.splice(randIndex, 1);
         chosenSongs.push(rand);
     }
 
