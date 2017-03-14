@@ -119,7 +119,7 @@ $('.navbar-room-header')
     .last()
     .find('.col-xs-4')
     .append(`
-        <input type="text" class="filterLocal">
+        <input type="text" class="filterLocal"/>
         <br/>
         <select
             class="selectLocal"
@@ -127,10 +127,13 @@ $('.navbar-room-header')
             style="width: 100%; height: 150px;"
         />
         <br/>
-        <input type="submit" value="Add" class="addLocal">
-        <input type="submit" value="Delete" class="deleteLocal">
-        <input type="submit" value="Import" class="importLocal">
-        <input type="submit" value="Export" class="exportLocal">
+        <input type="submit" value="Add" class="addLocal"/>
+        <input type="submit" value="Delete" class="deleteLocal"/>
+        <input type="submit" value="Import" class="importLocal"/>
+        <input type="submit" value="Export" class="exportLocal"/>
+        <br/>
+        <input type="text" class="addRandomInput"/>
+        <input type="submit" value="Add random" class="addRandom"/>
     `);
 $('#player ul.nav:eq(0)').append(`
     <li>
@@ -142,12 +145,11 @@ $('#player ul.nav:eq(0)').append(`
         </button>
     </li>
 `);
-$('body')
-    .on(
-        'click',
-        '.saveToLocalStorage',
-        saveToLocalStorage
-    );
+$('body').on(
+    'click',
+    '.saveToLocalStorage',
+    saveToLocalStorage
+);
 $('.filterLocal').on('input', () => {
     changeLocalSelect();
 });
@@ -205,6 +207,27 @@ $('.saveLocalCurrent').on('click', () => {
 
         saveLocalSong(videoID, title);
     });
+});
+$('.addRandom').on('click', () => {
+    let count = +$('.addRandomInput').val();
+
+    if (!count) {
+        return;
+    }
+
+    const localSongs = getLocalSongs();
+    const keys = Object.keys(localSongs);
+    const chosenSongs = [];
+
+    while (count--) {
+        const { length } = keys;
+        const randIndex = Math.floor(Math.random() * length);
+        const rand = keys[randIndex];
+
+        chosenSongs.push(rand);
+    }
+
+    addSongs(chosenSongs);
 });
 changeLocalSelect();
 
