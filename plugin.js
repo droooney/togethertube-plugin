@@ -98,6 +98,37 @@ window.addSong = (videoId) => {
     });
 };
 
+window.addRandomSongs = () => {
+    let count = +$('.addRandomInput').val();
+
+    if (!count) {
+        return;
+    }
+
+    const localSongs = getLocalSongs();
+    const keys = Object.keys(localSongs);
+    const chosenSongs = [];
+
+    while (count--) {
+        const { length } = keys;
+        const randIndex = Math.floor(Math.random() * length);
+        const rand = keys[randIndex];
+
+        keys.splice(randIndex, 1);
+        chosenSongs.push(rand);
+    }
+
+    addSongs(chosenSongs);
+};
+
+window.getPlaylistItemsLength = () => {
+    return angular
+        .element($('.videoList')[0])
+        .scope()
+        .playlistItems
+        .length;
+};
+
 if (!getLocalSongs()) {
     updateLocalSongs({});
 }
@@ -115,6 +146,23 @@ setInterval(() => {
             >Save</button>`).appendTo(elem);
         }
     });
+
+    const count = window.getPlaylistItemsLength();
+
+    if (!count && !window.waitingToAdd) {
+        window.waitingToAdd = true;
+
+        const checkboxValue = $('.addRandomAfter0')[0].checked;
+
+        if (checkboxValue) {
+            setTimeout(window.addRandomSongs, 2000);
+            setTimeout(() => {
+                window.waitingToAdd = false;
+            }, 4000);
+        } else {
+            window.waitingToAdd = false;
+        }
+    }
 }, 40);
 
 $('.navbar-room-header')
@@ -138,6 +186,9 @@ $('.navbar-room-header')
         <br/>
         <input type="text" class="addRandomInput"/>
         <input type="submit" value="Add random" class="addRandom"/>
+        <br/>
+        <input type="checkbox" class="addRandomAfter0"/>
+        Add random songs after 0 songs left
     `);
 $('#player ul.nav:eq(0)').append(`
     <li>
@@ -212,28 +263,7 @@ $('.saveLocalCurrent').on('click', () => {
         saveLocalSong(videoID, title);
     });
 });
-$('.addRandom').on('click', () => {
-    let count = +$('.addRandomInput').val();
-
-    if (!count) {
-        return;
-    }
-
-    const localSongs = getLocalSongs();
-    const keys = Object.keys(localSongs);
-    const chosenSongs = [];
-
-    while (count--) {
-        const { length } = keys;
-        const randIndex = Math.floor(Math.random() * length);
-        const rand = keys[randIndex];
-
-        keys.splice(randIndex, 1);
-        chosenSongs.push(rand);
-    }
-
-    addSongs(chosenSongs);
-});
+$('.addRandom').on('click', window.addRandomSongs);
 changeLocalSelect();
 
 (() => {
