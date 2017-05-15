@@ -1,12 +1,31 @@
+const __lsItems__ = {
+    localSongs: 'localSongs',
+    addRandomAfter0: 'getRandomAfter0',
+    addRandomNumber: 'addRandomNumber'
+};
+
+class LocalStorage {
+    constructor(storage) {
+        this._ls = storage;
+    }
+
+    get(item) {
+        return JSON.parse(this._ls.getItem(item));
+    }
+
+    set(item, value) {
+        this._ls.setItem(item, JSON.stringify(value));
+    }
+}
+
+const __ls__ = new LocalStorage(localStorage);
+
 window.getLocalSongs = () => {
-    return JSON.parse(localStorage.getItem('localSongs'));
+    return __ls__.get(__lsItems__.localSongs);
 };
 
 window.updateLocalSongs = (songs) => {
-    localStorage.setItem(
-        'localSongs',
-        JSON.stringify(songs)
-    );
+    __ls__.set(__lsItems__.localSongs, songs);
 };
 
 window.saveLocalSong = (videoID, name) => {
@@ -133,6 +152,14 @@ if (!getLocalSongs()) {
     updateLocalSongs({});
 }
 
+if (__ls__.get(__lsItems__.addRandomAfter0) === null) {
+    __ls__.set(__lsItems__.addRandomAfter0, true);
+}
+
+if (__ls__.get(__lsItems__.addRandomNumber) === null) {
+    __ls__.set(__lsItems__.addRandomNumber, 1);
+}
+
 setInterval(() => {
     const statuses = $('.voteStatus');
 
@@ -184,7 +211,7 @@ $('.navbar-room-header')
         <input type="submit" value="Import" class="importLocal"/>
         <input type="submit" value="Export" class="exportLocal"/>
         <br/>
-        <input type="text" class="addRandomInput"/>
+        <input type="number" class="addRandomInput"/>
         <input type="submit" value="Add random" class="addRandom"/>
         <br/>
         <input type="checkbox" class="addRandomAfter0"/>
@@ -264,7 +291,16 @@ $('.saveLocalCurrent').on('click', () => {
     });
 });
 $('.addRandom').on('click', window.addRandomSongs);
+$('.addRandomInput').on('input', (e) => {
+    __ls__.set(__lsItems__.addRandomNumber, e.target.valueAsNumber);
+});
+$('.addRandomAfter0').on('change', (e) => {
+    __ls__.set(__lsItems__.addRandomAfter0, e.target.checked);
+});
+
 changeLocalSelect();
+$('.addRandomInput')[0].value = __ls__.get(__lsItems__.addRandomNumber);
+$('.addRandomAfter0')[0].checked = __ls__.get(__lsItems__.addRandomAfter0);
 
 (() => {
     const select = $('.selectLocal');
