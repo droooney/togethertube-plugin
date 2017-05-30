@@ -1,7 +1,8 @@
 const __lsItems__ = {
     localSongs: 'localSongs',
     addRandomAfter0: 'getRandomAfter0',
-    addRandomNumber: 'addRandomNumber'
+    addRandomNumber: 'addRandomNumber',
+    useFilterForRandom: 'useFilterForRandom'
 };
 
 class LocalStorage {
@@ -63,7 +64,7 @@ window.changeLocalSelect = () => {
 
     select.html('');
 
-    $.each(songs, (song, search) => {
+    $.each(songs, (song) => {
         if (!new RegExp(filter, 'i').test(song)) {
             return;
         }
@@ -124,7 +125,18 @@ window.addRandomSongs = () => {
         return;
     }
 
-    const localSongs = getLocalSongs();
+    let localSongs = getLocalSongs();
+
+    if (__ls__.get(__lsItems__.useFilterForRandom)) {
+        const filter = $('.filterLocal').val();
+
+        $.each(localSongs, (song) => {
+            if (!new RegExp(filter, 'i').test(song)) {
+                delete localSongs[song];
+            }
+        });
+    }
+
     const keys = Object.keys(localSongs);
     const chosenSongs = [];
 
@@ -158,6 +170,10 @@ if (__ls__.get(__lsItems__.addRandomAfter0) === null) {
 
 if (__ls__.get(__lsItems__.addRandomNumber) === null) {
     __ls__.set(__lsItems__.addRandomNumber, 1);
+}
+
+if (__ls__.get(__lsItems__.useFilterForRandom) === null) {
+    __ls__.set(__lsItems__.useFilterForRandom, true);
 }
 
 setInterval(() => {
@@ -216,6 +232,9 @@ $('.navbar-room-header')
         <br/>
         <input type="checkbox" class="addRandomAfter0"/>
         Add random songs after 0 songs left
+        <br/>
+        <input type="checkbox" class="useFilterForRandom"/>
+        Use filter for random songs
     `);
 $('#player ul.nav:eq(0)').append(`
     <li>
@@ -297,10 +316,14 @@ $('.addRandomInput').on('input', (e) => {
 $('.addRandomAfter0').on('change', (e) => {
     __ls__.set(__lsItems__.addRandomAfter0, e.target.checked);
 });
+$('.useFilterForRandom').on('change', (e) => {
+    __ls__.set(__lsItems__.useFilterForRandom, e.target.checked);
+});
 
 changeLocalSelect();
 $('.addRandomInput')[0].value = __ls__.get(__lsItems__.addRandomNumber);
 $('.addRandomAfter0')[0].checked = __ls__.get(__lsItems__.addRandomAfter0);
+$('.useFilterForRandom')[0].checked = __ls__.get(__lsItems__.useFilterForRandom);
 
 (() => {
     const select = $('.selectLocal');
