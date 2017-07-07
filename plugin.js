@@ -219,7 +219,7 @@ $('.navbar-room-header')
         <select
             class="selectLocal"
             multiple
-            style="width: 100%; height: 150px;"
+            style="width: 100%; height: 250px;"
         />
         <br/>
         <input type="submit" value="Add" class="addLocal"/>
@@ -274,8 +274,6 @@ $('.importLocal').on('click', () => {
 });
 $('.exportLocal').on('click', () => {
     const textarea = document.createElement('textarea');
-    const range = document.createRange();
-    const selection = window.getSelection();
 
     $(textarea).css({
         position: 'absolute',
@@ -285,9 +283,7 @@ $('.exportLocal').on('click', () => {
         JSON.stringify(getLocalSongs())
     );
     document.body.appendChild(textarea);
-    range.selectNodeContents(textarea);
-    selection.removeAllRanges();
-    selection.addRange(range);
+    textarea.select();
     document.execCommand('copy');
     textarea.remove();
     alert('The songs have been copied to the clipboard');
