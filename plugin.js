@@ -78,19 +78,16 @@ window.changeLocalSelect = () => {
     });
 };
 
-window.addSongs = (songs) => {
+window.addSongs = async (songs) => {
     $('.nav-tabs')
         .find('li:contains("Search Videos") a')
         [0].click();
 
     const localSongs = getLocalSongs();
-    let promise = Promise.resolve();
 
-    $.each(songs, (i, song) => {
-        promise = promise.then(() => (
-            addSong(localSongs[song])
-        ));
-    });
+    for (let song of songs) {
+        await addSong(localSongs[song]);
+    }
 };
 
 window.addSong = (videoId) => {
@@ -288,22 +285,20 @@ $('.exportLocal').on('click', () => {
     textarea.remove();
     alert('The songs have been copied to the clipboard');
 });
-$('.saveLocalCurrent').on('click', () => {
+$('.saveLocalCurrent').on('click', async () => {
     const videoID = angular
         .element($('[data-ng-app]'))
         .scope()
         .remotePlayer
         .mediaId;
-
-    $.get('https://www.googleapis.com/youtube/v3/videos', {
+    const data = await $.get('https://www.googleapis.com/youtube/v3/videos', {
         id: videoID,
         part: 'snippet',
         key: 'AIzaSyBe_-Zv9yb3G9KBwB1kBzp9F4feyTZw_zM'
-    }).then((data) => {
-        const { title } = data.items[0].snippet;
-
-        saveLocalSong(videoID, title);
     });
+    const { title } = data.items[0].snippet;
+
+    saveLocalSong(videoID, title);
 });
 $('.addRandom').on('click', window.addRandomSongs);
 $('.addRandomInput').on('input', (e) => {
